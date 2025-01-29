@@ -9,6 +9,7 @@ from aiogram.enums import ParseMode
 from dotenv import load_dotenv
 
 from src.db.models.base import db as database
+from src.handlers.handler import router
 
 load_dotenv('.env')
 
@@ -21,11 +22,13 @@ async def on_startup():
 
 
 async def on_shutdown(bot: Bot):
+    # await database.drop_all()
     await bot.delete_my_commands()
 
 
 async def main() -> None:
     bot = Bot(token=os.getenv('BOT_TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    dp.include_router(router=router)
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
     await dp.start_polling(bot)
