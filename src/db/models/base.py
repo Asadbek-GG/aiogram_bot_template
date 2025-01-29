@@ -39,7 +39,7 @@ class AsyncDatabaseSession:
         self._engine = create_async_engine(
             conf.db.db_url
         )
-        self._session = sessionmaker(self._engine, expire_on_commit=False, class_=AsyncSession)()
+        self._session = sessionmaker(self._engine, expire_on_commit=False, class_=AsyncSession)()  # noqa
 
     async def create_all(self):
         async with self._engine.begin() as conn:
@@ -62,10 +62,12 @@ class AbstractClass:
         except Exception:
             await db.rollback()
             raise
+        # else:
+        #     await db.savepoint()
 
     @classmethod
     async def create(cls, **kwargs):
-        object_ = cls(**kwargs)
+        object_ = cls(**kwargs)  # noqa
         db.add(object_)
         await cls.commit()
         return object_
@@ -75,14 +77,14 @@ class AbstractClass:
         if id_:
             query = (
                 sqlalchemy_update(cls)
-                .where(cls.id == id_)
+                .where(cls.id == id_)  # noqa
                 .values(**kwargs)
                 .execution_options(synchronize_session="fetch")
             )
         else:
             query = (
                 sqlalchemy_update(cls)
-                .where(cls.telegram_id == telegram_id)
+                .where(cls.telegram_id == telegram_id)  # noqa
                 .values(**kwargs)
                 .execution_options(synchronize_session="fetch")
             )
@@ -90,40 +92,27 @@ class AbstractClass:
         await cls.commit()
 
     @classmethod
-    async def get(cls, id_=None, user_telegram_id=None):
-        if id_:
-            query = select(cls).where(cls.id == id_)
-            return (await db.execute(query)).scalar()
-        else:
-            query = select(cls).where(cls.user_telegram_id == user_telegram_id)
-            return (await db.execute(query)).scalars()
-
-    @classmethod
-    async def delete(cls, id_=None, user_telegram_id=None):
-        if id_:
-            query = sqlalchemy_delete(cls).where(cls.id == id_)
-        else:
-            query = sqlalchemy_delete(cls).where(cls.user_telegram_id == user_telegram_id)
-        await db.execute(query)
-        await cls.commit()
-
-    @classmethod
-    async def get_all(cls):
-        return (await db.execute(select(cls))).scalars()
-
-    @classmethod
-    async def get_with_telegram_id(cls, telegram_id):
-        query = select(cls).where(cls.telegram_id == telegram_id)
+    async def get(cls, id_: int):
+        query = select(cls).where(cls.id == id_)  # noqa
         return (await db.execute(query)).scalar()
 
     @classmethod
     async def delete(cls, id_=None, user_telegram_id=None):
         if id_:
-            query = sqlalchemy_delete(cls).where(cls.id == id_)
+            query = sqlalchemy_delete(cls).where(cls.id == id_)  # noqa
         else:
-            query = sqlalchemy_delete(cls).where(cls.user_telegram_id == user_telegram_id)
+            query = sqlalchemy_delete(cls).where(cls.user_telegram_id == user_telegram_id)  # noqa
         await db.execute(query)
         await cls.commit()
+
+    @classmethod
+    async def get_all(cls) -> None:
+        return (await db.execute(select(cls))).scalars()
+
+    @classmethod
+    async def get_with_telegram_id(cls, telegram_id: int) -> None:
+        query = select(cls).where(cls.telegram_id == telegram_id)  # noqa
+        return (await db.execute(query)).scalar()
 
 
 class BaseModel(Base, AbstractClass):

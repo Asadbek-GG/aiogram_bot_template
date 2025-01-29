@@ -10,6 +10,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 from dotenv import load_dotenv
 
+from src.db.models.base import db as database
 from src.db.models.users import User
 
 load_dotenv('.env')
@@ -28,6 +29,7 @@ async def command_start_handler(message: Message) -> None:
             username=user_data['username'],
             telegram_id=user_data['id']
         )
+
     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
 
 
@@ -39,8 +41,19 @@ async def echo_handler(message: Message) -> None:
         await message.answer("Nice try!")
 
 
+async def on_startup(bot: Bot):
+    logging.info("Starting up...")
+    await database.create_all()
+
+
+async def on_shutdown(bot: Bot):
+    await bot.delete_my_commands()
+
+
 async def main() -> None:
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    dp.startup.register(on_startup)
+    dp.shutdown.register(on_shutdown)
     await dp.start_polling(bot)
 
 

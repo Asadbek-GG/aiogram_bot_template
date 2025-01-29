@@ -17,4 +17,4 @@ class User(TimeBaseModel):
     phone_number: Mapped[str] = mapped_column(VARCHAR(255), nullable=True)
     username: Mapped[str] = mapped_column(VARCHAR(255), nullable=True)
     telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True)
-    # type: Mapped[Type] = mapped_column(SQLEnum(Type), default=Type.USER)
+    # type: # Mapped[Type] = mapped_column(SQLEnum(Type), default=Type.USER)
