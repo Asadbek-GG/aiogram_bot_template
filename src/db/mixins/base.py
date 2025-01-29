@@ -1,30 +1,38 @@
-import datetime
+from datetime import datetime
 
-from sqlalchemy import func
-from sqlalchemy.orm import Mapped, declared_attr, mapped_column
-
-
-
-
-
-class TimeStampMixin(object):
-    created_at: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        server_default=func.now(), onupdate=func.now()
-    )
+import pytz
+from sqlalchemy import func, BigInteger
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.types import TypeDecorator, DateTime
 
 
-class TableNameMixin(object):
+class BaseModel(Base, AbstractClass):
+    __abstract__ = True
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
 
-    @declared_attr
-    def __tablename__(cls) -> str:
-        if cls.__name__.endswith("s"):
-            return cls.__name__.lower() + "es"
-        else:
-            return cls.__name__.lower() + "s"
+    def __str__(self):
+        return f"{self.id}"
 
 
-class BaseModelMixin(TimeStampMixin, TableNameMixin):
-    __table_args__ = {"extend_existing": True}
-    __mapper_args__ = {"always_refresh": True}
-    id: Mapped[int] = mapped_column(primary_key=True)
+class TimeStamp(TypeDecorator):
+    impl = DateTime(timezone=True)
+    cache_ok = True
+    TASHKENT_TIMEZONE = pytz.timezone("Asia/Tashkent")
+
+    def process_bind_param(self, value: datetime, dialect):
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            value = self.TASHKENT_TIMEZONE.localize(value)
+        return value.astimezone(self.TASHKENT_TIMEZONE)
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return value.astimezone(self.TASHKENT_TIMEZONE)
+        return value
+
+
+class TimeBaseModel(BaseModel):
+    __abstract__ = True
+    created_at: Mapped[TimeStamp] = mapped_column(TimeStamp, server_default=func.now())
+    updated_at: Mapped[TimeStamp] = mapped_column(TimeStamp, server_default=func.now(), server_onupdate=func.now())

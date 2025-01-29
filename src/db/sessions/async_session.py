@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from root import settings
-from ..models.base import BaseModel
 
 
 class AsyncDatabaseSessionManager:
