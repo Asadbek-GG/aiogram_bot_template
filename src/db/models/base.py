@@ -62,8 +62,6 @@ class AbstractClass:
         except Exception:
             await db.rollback()
             raise
-        # else:
-        #     await db.savepoint()
 
     @classmethod
     async def create(cls, **kwargs):

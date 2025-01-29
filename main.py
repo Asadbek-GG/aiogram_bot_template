@@ -28,7 +28,7 @@ async def on_shutdown(bot: Bot):
 
 async def main() -> None:
     bot = Bot(token=os.getenv('BOT_TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    dp.include_router(router=router)
+    dp.include_router(router)
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
     await dp.start_polling(bot)
