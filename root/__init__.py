@@ -1,1 +1,1 @@
-from db_config import DatabaseConfig
+from .db_config import conf

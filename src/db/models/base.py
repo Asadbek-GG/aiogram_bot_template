@@ -1,8 +1,14 @@
+from datetime import datetime
+
+import pytz
 from sqlalchemy import delete as sqlalchemy_delete, update as sqlalchemy_update, select
+from sqlalchemy import func, BigInteger
 from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, declared_attr, sessionmaker
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.types import TypeDecorator, DateTime
 
-from root import DatabaseConfig
+from root import conf
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -31,7 +37,7 @@ class AsyncDatabaseSession:
 
     def init(self):
         self._engine = create_async_engine(
-            DatabaseConfig.db_url
+            conf.db.db_url
         )
         self._session = sessionmaker(self._engine, expire_on_commit=False, class_=AsyncSession)()
 
@@ -104,3 +110,49 @@ class AbstractClass:
     @classmethod
     async def get_all(cls):
         return (await db.execute(select(cls))).scalars()
+
+    @classmethod
+    async def get_with_telegram_id(cls, telegram_id):
+        query = select(cls).where(cls.telegram_id == telegram_id)
+        return (await db.execute(query)).scalar()
+
+    @classmethod
+    async def delete(cls, id_=None, user_telegram_id=None):
+        if id_:
+            query = sqlalchemy_delete(cls).where(cls.id == id_)
+        else:
+            query = sqlalchemy_delete(cls).where(cls.user_telegram_id == user_telegram_id)
+        await db.execute(query)
+        await cls.commit()
+
+
+class BaseModel(Base, AbstractClass):
+    __abstract__ = True
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+
+    def __str__(self):
+        return f"{self.id}"
+
+
+class TimeStamp(TypeDecorator):
+    impl = DateTime(timezone=True)
+    cache_ok = True
+    TASHKENT_TIMEZONE = pytz.timezone("Asia/Tashkent")
+
+    def process_bind_param(self, value: datetime, dialect):
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            value = self.TASHKENT_TIMEZONE.localize(value)
+        return value.astimezone(self.TASHKENT_TIMEZONE)
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return value.astimezone(self.TASHKENT_TIMEZONE)
+        return value
+
+
+class TimeBaseModel(BaseModel):
+    __abstract__ = True
+    created_at: Mapped[TimeStamp] = mapped_column(TimeStamp, server_default=func.now())
+    updated_at: Mapped[TimeStamp] = mapped_column(TimeStamp, server_default=func.now(), server_onupdate=func.now())
