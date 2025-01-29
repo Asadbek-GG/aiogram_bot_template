@@ -3,7 +3,7 @@ from typing import Optional
 
 from sqlalchemy import BigInteger, VARCHAR
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, validates
 
 from src.db.models.base import TimeBaseModel
 
@@ -20,3 +20,10 @@ class User(TimeBaseModel):
     username: Mapped[Optional[str]] = mapped_column(VARCHAR(100), nullable=True)
     telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
     type: Mapped[Type] = mapped_column(SQLEnum(Type), default=Type.USER.value)
+
+    @validates('phone_number')
+    def validate_phone_number(self):
+        phone_number = self.phone_number
+        if len(phone_number) == 13:
+            raise ValueError("failed simple email validation")
+        return phone_number
