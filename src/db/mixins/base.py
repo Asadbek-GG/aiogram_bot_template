@@ -5,6 +5,8 @@ from sqlalchemy import func, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import TypeDecorator, DateTime
 
+from src.db.models import Base, AbstractClass
+
 
 class BaseModel(Base, AbstractClass):
     __abstract__ = True

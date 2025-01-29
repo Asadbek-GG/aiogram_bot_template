@@ -1,7 +1,8 @@
-import sqlalchemy
-from sqlalchemy import delete as sqlalchemy_delete, update as sqlalchemy_update, select, and_
+from sqlalchemy import delete as sqlalchemy_delete, update as sqlalchemy_update, select
 from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, AsyncSession
-from sqlalchemy.orm import DeclarativeBase, declared_attr, sessionmaker, selectinload
+from sqlalchemy.orm import DeclarativeBase, declared_attr, sessionmaker
+
+from root import DatabaseConfig
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -30,7 +31,7 @@ class AsyncDatabaseSession:
 
     def init(self):
         self._engine = create_async_engine(
-            conf.db.db_url
+            DatabaseConfig.db_url
         )
         self._session = sessionmaker(self._engine, expire_on_commit=False, class_=AsyncSession)()
 
@@ -92,29 +93,6 @@ class AbstractClass:
             return (await db.execute(query)).scalars()
 
     @classmethod
-    async def get_products_by_user(cls, user_id, order_id=None):
-        async with db._session as session:
-            if user_id and order_id:
-                query = (
-                    sqlalchemy.select(cls)
-                    .options(selectinload(cls.product))
-                    .where(cls.user_telegram_id == user_id, cls.order_id == order_id)
-                )
-            else:
-                query = (
-                    sqlalchemy.select(cls)
-                    .options(selectinload(cls.product))
-                    .where(cls.user_telegram_id == user_id)
-                )
-            result = await session.execute(query)
-            return result.scalars().all()
-
-    @classmethod
-    async def get_with_telegram_id(cls, telegram_id):
-        query = select(cls).where(cls.telegram_id == telegram_id)
-        return (await db.execute(query)).scalar()
-
-    @classmethod
     async def delete(cls, id_=None, user_telegram_id=None):
         if id_:
             query = sqlalchemy_delete(cls).where(cls.id == id_)
@@ -124,35 +102,5 @@ class AbstractClass:
         await cls.commit()
 
     @classmethod
-    async def count_grouped_by_user_telegram_id(cls, user_telegram_id):
-        query = (
-            sqlalchemy.select(sqlalchemy.func.count(sqlalchemy.distinct(cls.product_id)))
-            .where(cls.user_telegram_id == user_telegram_id)
-            .group_by(cls.user_telegram_id)
-        )
-        async with db._session as session:
-            result = await session.execute(query)
-            count = result.scalar_one_or_none()
-        return count if count else 0
-
-    @classmethod
     async def get_all(cls):
         return (await db.execute(select(cls))).scalars()
-
-    @classmethod
-    async def is_admin(cls, telegram_id):
-        query = select(cls).where(
-            and_(cls.telegram_id == telegram_id, cls.type == "ADMIN")
-        )
-
-        return (await db.execute(query)).scalars().first()
-
-    @classmethod
-    async def get_name(cls, id_: int):
-        query = select(cls).where(cls.id == id_)
-        result = await db.execute(query)
-        instance = result.scalars().first()
-
-        if instance:
-            return instance.name
-        return None
