@@ -10,16 +10,16 @@ from src.db.models.base import TimeBaseModel
 
 class User(TimeBaseModel):
     class Type(Enum):
-        USER = "user"
-        ADMIN = "admin"
-        SUPER_USER = "superuser"
+        USER = "USER"
+        ADMIN = "ADMIN"
+        SUPER_USER = "SUPERUSER"
 
     first_name: Mapped[str] = mapped_column(VARCHAR(100), nullable=True)
     last_name: Mapped[Optional[str]] = mapped_column(VARCHAR(100), nullable=True)
     phone_number: Mapped[Optional[str]] = mapped_column(VARCHAR(100), nullable=True)
     username: Mapped[Optional[str]] = mapped_column(VARCHAR(100), nullable=True)
     telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
-    type: Mapped[Type] = mapped_column(SQLEnum(Type), default=Type.USER.value)
+    type: Mapped[Type] = mapped_column(SQLEnum(Type), default=Type.USER)
 
     @validates('phone_number')
     def validate_phone_number(self):
