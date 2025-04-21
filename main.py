@@ -16,6 +16,9 @@ load_dotenv('.env')
 dp = Dispatcher()
 
 
+
+
+
 async def on_startup():
     logging.info("Starting up...")
     await database.create_all()
