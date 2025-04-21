@@ -8,15 +8,12 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from dotenv import load_dotenv
 
-from database.models import db as database
 from bot.handlers.handler import router
+from database import db as database
 
 load_dotenv('.env')
 
 dp = Dispatcher()
-
-
-
 
 
 async def on_startup():
