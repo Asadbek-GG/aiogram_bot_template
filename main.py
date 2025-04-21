@@ -8,8 +8,8 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from dotenv import load_dotenv
 
-from src.db.models.base import db as database
-from src.handlers.handler import router
+from database.models import db as database
+from bot.handlers.handler import router
 
 load_dotenv('.env')
 

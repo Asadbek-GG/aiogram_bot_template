@@ -8,7 +8,6 @@ from sqlalchemy.orm import DeclarativeBase, declared_attr, sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import TypeDecorator, DateTime
 
-from root import conf
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -37,7 +36,7 @@ class AsyncDatabaseSession:
 
     def init(self):
         self._engine = create_async_engine(
-            conf.db.db_url
+            db.db_url
         )
         self._session = sessionmaker(self._engine, expire_on_commit=False, class_=AsyncSession)()  # noqa
 
