@@ -712,3 +712,5 @@ cython_debug/
 .env
 __pycache__/
 
+src/
+root/

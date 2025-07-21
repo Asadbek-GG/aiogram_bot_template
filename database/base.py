@@ -25,7 +25,7 @@ class Base(AsyncAttrs, DeclarativeBase):
         return __name + 's'
 
     def to_dict(self):
-        return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs} # noqa
+        return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}  # noqa
 
     def __repr__(self):
         return str(self.to_dict())
@@ -73,6 +73,11 @@ class AbstractClass:
     @classmethod
     async def get(cls, _id: int):
         return (await db.execute(select(cls).where(cls.id == _id))).scalar()
+
+    @classmethod
+    async def get_with_telegram_id(cls, telegram_id):
+        query = select(cls).where(cls.telegram_id == telegram_id)
+        return (await db.execute(query)).scalar()
 
     @classmethod
     async def create(cls, **kwargs):
